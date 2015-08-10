@@ -1,0 +1,8 @@
+zabbix_server: https://your.zabbix
+consul_kv_key: zabbix/token
+username: zabbix_user
+password: zabbix_password
+host_groups:
+  - "Your host group"
+templates:
+  - "Your template"
