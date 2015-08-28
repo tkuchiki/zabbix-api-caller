@@ -6,3 +6,4 @@ host_groups:
   - "Your host group"
 templates:
   - "Your template"
+proxy_name: "Your proxy name"
