@@ -39,6 +39,7 @@ type Config struct {
 	Hostname        string   `yaml:"hostname"`
 	IpAddr          string   `yaml:"ipaddr"`
 	ZabbixAgentPort string   `yaml:"zabbix_agent_port"`
+	ProxyName       string   `yaml:"proxy_name"`
 }
 
 func AbsPath(fname string) (f string, err error) {
@@ -141,6 +142,7 @@ func ZabbixAPILogin(username, password string) (err error) {
 	zabbixapi.Auth = token
 	res, err = zabbixapi.Call("user.get", zabbix.Params{"output": "extend"})
 	if err != nil || res.Error != nil {
+		zabbixapi = ZabbixAPI()
 		token, err = zabbixapi.Login(username, password)
 		if err == nil {
 			err = PutKV(config.ConsulKVKey, token)
@@ -161,15 +163,18 @@ func ZabbixHostInterface(dns, ip, port string, main, useip int, _type zabbix.Int
 	}
 }
 
-func ZabbixHostCreate(host string, groupIds zabbix.HostGroupIds, interfaces zabbix.HostInterfaces, templates TemplateIds) (err error) {
+func ZabbixHostCreate(host string, groupIds zabbix.HostGroupIds, interfaces zabbix.HostInterfaces, templates TemplateIds, proxyId string) (err error) {
 	i := 0
+	zParams := zabbix.Params{"host": host,
+		"groups":     groupIds,
+		"interfaces": interfaces,
+		"templates":  templates,
+	}
+	if proxyId != "" {
+		zParams["proxy_hostid"] = "10085"
+	}
 	for {
-		res, err := zabbixapi.Call("host.create", zabbix.Params{"host": host,
-			"groups":     groupIds,
-			"interfaces": interfaces,
-			"templates":  templates,
-		})
-		fmt.Println(res)
+		res, err := zabbixapi.Call("host.create", zParams)
 		if (err == nil && res.Error == nil) || i == retry {
 			break
 		}
@@ -177,6 +182,28 @@ func ZabbixHostCreate(host string, groupIds zabbix.HostGroupIds, interfaces zabb
 		time.Sleep(sleepTime)
 	}
 	return err
+}
+
+func ZabbixProxyGet(proxyName string) (proxyId string, err error) {
+	var res zabbix.Response
+	i := 0
+	for {
+		res, err = zabbixapi.Call("proxy.get", zabbix.Params{"output": []string{"host", "proxyid"}, "filter": map[string]string{"host": proxyName}})
+
+		if res.Error == nil {
+			for _, proxy := range res.Result.([]interface{}) {
+				p := proxy.(map[string]interface{})
+				proxyId = p["proxyid"].(string)
+			}
+		}
+
+		if (err == nil && res.Error == nil) || i == retry {
+			break
+		}
+		i++
+		time.Sleep(sleepTime)
+	}
+	return proxyId, err
 }
 
 func ZabbixHostGetByHost(hostname string) (host *zabbix.Host, err error) {
@@ -367,7 +394,6 @@ var (
 )
 
 var (
-	//app      = kingpin.Command("zabbix-api", "Call zabbix api.")
 	file     = kingpin.Flag("file", "Config file").Short('f').Required().String()
 	hostname = kingpin.Flag("hostname", "Hostname").Short('h').String()
 	ipaddr   = kingpin.Flag("ipaddr", "IP Address").String()
@@ -446,7 +472,16 @@ func main() {
 			log.Fatal(err)
 		}
 
-		err = ZabbixHostCreate(zabbixHost, groups, interfaces, templates)
+		var proxyId string
+
+		if config.ProxyName != "" {
+			proxyId, err = ZabbixProxyGet(config.ProxyName)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		err = ZabbixHostCreate(zabbixHost, groups, interfaces, templates, proxyId)
 		if err != nil {
 			log.Fatal(err)
 		}
