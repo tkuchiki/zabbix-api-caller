@@ -171,7 +171,7 @@ func ZabbixHostCreate(host string, groupIds zabbix.HostGroupIds, interfaces zabb
 		"templates":  templates,
 	}
 	if proxyId != "" {
-		zParams["proxy_hostid"] = "10085"
+		zParams["proxy_hostid"] = proxyId
 	}
 	for {
 		res, err := zabbixapi.Call("host.create", zParams)
