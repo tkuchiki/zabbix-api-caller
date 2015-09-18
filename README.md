@@ -6,9 +6,9 @@ zabbix api with golang
 ## Linux
 
 ```
-$ curl -sLO https://github.com/tkuchiki/zabbix-api-caller/releases/download/v0.0.1/zabbix-api-caller-linux-amd64.zip
-$ unzip zabbix-api-caller-linux-amd64.zip
-$ mv zabbix-api-caller-linux-amd64 zabbix-api-caller
+$ curl -sLO https://github.com/tkuchiki/zabbix-api-caller/releases/download/v0.0.2/go-zabbix-api-caller-linux-amd64.zip
+$ unzip go-zabbix-api-caller-linux-amd64.zip
+$ mv go-zabbix-api-caller-linux-amd64 zabbix-api-caller
 ```
 
 # Build
