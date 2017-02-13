@@ -136,9 +136,9 @@ func (z *Zabbix) HostCreate(host string, groupIds zabbix.HostGroupIds, interface
 		"templates":  templates,
 	}
 
-	var proxyId string
-	proxyId, err = z.proxyGet()
-	if proxyId != "" {
+	if z.config.ProxyName != "" {
+		var proxyId string
+		proxyId, err = z.proxyGet()
 		zParams["proxy_hostid"] = proxyId
 	}
 
