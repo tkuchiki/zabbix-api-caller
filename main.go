@@ -27,10 +27,11 @@ func GetIP(ipaddr string) (string, error) {
 }
 
 var (
-	file     = kingpin.Flag("file", "Config file").Short('f').Required().String()
-	hostname = kingpin.Flag("hostname", "Hostname").Short('h').String()
-	ipaddr   = kingpin.Flag("ipaddr", "IP Address").String()
-	host     = kingpin.Command("host", "Operate host")
+	file         = kingpin.Flag("file", "Config file").Short('f').Required().String()
+	hostname     = kingpin.Flag("hostname", "Hostname").Short('h').String()
+	ipaddr       = kingpin.Flag("ipaddr", "IP Address").String()
+	ignoreErrors = kingpin.Flag("ignore-errors", "Ignore errors").Bool()
+	host         = kingpin.Command("host", "Operate host")
 	// host status
 	hostStatus = host.Command("status", "Operate host status")
 	// host status enable
@@ -47,7 +48,7 @@ var (
 
 func main() {
 	var err error
-	kingpin.Version("0.1.0")
+	kingpin.Version("0.1.1")
 	subcommand := kingpin.Parse()
 
 	log := logrus.New()
@@ -84,13 +85,19 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		zabbix.HostEnable(host.HostId)
+		err = zabbix.HostEnable(host.HostId)
+		if err != nil && !*ignoreErrors {
+			log.Fatal(err)
+		}
 	case "host status disable":
 		host, err := zabbix.HostGetByHost()
 		if err != nil {
 			log.Fatal(err)
 		}
-		zabbix.HostDisable(host.HostId)
+		err = zabbix.HostDisable(host.HostId)
+		if err != nil && !*ignoreErrors {
+			log.Fatal(err)
+		}
 	case "host register":
 		ipaddr, err := GetIP(*ipaddr)
 		if err != nil {
@@ -110,7 +117,7 @@ func main() {
 		}
 
 		err = zabbix.HostCreate(config.Hostname, groups, interfaces, templates)
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 	case "host delete":
@@ -118,10 +125,13 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		zabbix.HostDelete(host.HostId)
+		err = zabbix.HostDelete(host.HostId)
+		if err != nil && !*ignoreErrors {
+			log.Fatal(err)
+		}
 	case "host list":
 		zabbixHosts, err := zabbix.EnableHosts()
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 
