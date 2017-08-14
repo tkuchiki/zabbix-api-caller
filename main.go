@@ -82,7 +82,7 @@ func main() {
 	switch subcommand {
 	case "host status enable":
 		host, err := zabbix.HostGetByHost()
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 		err = zabbix.HostEnable(host.HostId)
@@ -91,7 +91,7 @@ func main() {
 		}
 	case "host status disable":
 		host, err := zabbix.HostGetByHost()
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 		err = zabbix.HostDisable(host.HostId)
@@ -107,12 +107,12 @@ func main() {
 		interfaces := zabbix.HostInterface("", ipaddr, 1, 1, 1)
 
 		groups, err := zabbix.HostGroupIds(config.HostGroups)
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 
 		templates, err := zabbix.Templates(config.Templates)
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 
@@ -122,7 +122,7 @@ func main() {
 		}
 	case "host delete":
 		host, err := zabbix.HostGetByHost()
-		if err != nil {
+		if err != nil && !*ignoreErrors {
 			log.Fatal(err)
 		}
 		err = zabbix.HostDelete(host.HostId)
