@@ -61,7 +61,7 @@ func main() {
 
 	var consul Consul
 	consul, err = NewConsul()
-	if err != nil && config.storage == "consul" {
+	if err != nil && config.Storage == "consul" {
 		log.Fatal(err)
 	}
 
